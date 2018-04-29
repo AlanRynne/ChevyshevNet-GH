@@ -53,6 +53,7 @@
     <Compile Include="Properties\AssemblyInfo.cs" />
     <Compile Include="ChevyshevNetGHComponent.cs" />
     <Compile Include="ChevyshevNetGHInfo.cs" />
+    <Compile Include="ChebyshevNet.cs" />
   </ItemGroup>
   <Import Project="$(MSBuildBinPath)\Microsoft.CSharp.targets" />
 </Project>
