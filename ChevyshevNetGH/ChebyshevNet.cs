@@ -7,7 +7,7 @@ using Grasshopper.Kernel.Data;
 using Rhino.Geometry;
 using Rhino.Geometry.Intersect;
 
-namespace CompassMethod
+namespace ChevyshevNetGH
 {
     public class ChebyshevNet
     {

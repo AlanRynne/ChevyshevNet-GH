@@ -11,7 +11,7 @@ namespace ChevyshevNetGH
         {
             get
             {
-                return "ChevyshevNetGH Info";
+                return "Chevyshev Net";
             }
         }
         public override Bitmap Icon
@@ -27,7 +27,7 @@ namespace ChevyshevNetGH
             get
             {
                 //Return a short string describing the purpose of this GHA library.
-                return "";
+                return "Creates a grid of same length in any given freeform surface";
             }
         }
         public override Guid Id
@@ -43,7 +43,7 @@ namespace ChevyshevNetGH
             get
             {
                 //Return a string identifying you or your company.
-                return "";
+                return "Alan Rynne";
             }
         }
         public override string AuthorContact
@@ -51,7 +51,7 @@ namespace ChevyshevNetGH
             get
             {
                 //Return a string representing your preferred contact details.
-                return "";
+                return "www.rynne.es || alan@rynne.es";
             }
         }
     }
