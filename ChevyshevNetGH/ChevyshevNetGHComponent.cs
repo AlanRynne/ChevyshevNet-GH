@@ -36,7 +36,7 @@ namespace ChevyshevNetGH
             pManager.AddNumberParameter("Grid Size", "L", "Specify grid size for Chebyshev net", GH_ParamAccess.item, 1.0);
             pManager.AddNumberParameter("Rotation Angle", "Angle", "Rotation angle in radians", GH_ParamAccess.item, 0.0);
             pManager.AddBooleanParameter("Extend Surface", "Extend", "Set to true to extend the surface", GH_ParamAccess.item, true);
-
+            pManager.AddNumberParameter("Number of axis", "Axis no.", "Number of axis for the grid generation (3 to 6)",GH_ParamAccess.item, 4);
         }
 
         /// <summary>
@@ -57,31 +57,54 @@ namespace ChevyshevNetGH
         /// to store data in output parameters.</param>
         protected override void SolveInstance(IGH_DataAccess DA)
         {
-            // DECLARE PRIVATE VARIABLES
+            // DECLARE INSTANCE VARIABLES
+
             Surface surf = null;
-            if (!DA.GetData(0, ref surf)) { return; }
-
             Point3d stPt = Point3d.Unset;
-            if (!DA.GetData(1, ref stPt)) { return; }
-
             double gridLength = 1.0;
-            if (!DA.GetData(2, ref gridLength)) { return; }
-
             double rotationAngle = 0.0;
-            if (!DA.GetData(3, ref rotationAngle)) { return; }
-
             bool surfExtend = true;
+            double numAxis = 0;
+
+            if (!DA.GetData(0, ref surf)) { return; }
+            if (!DA.GetData(1, ref stPt)) { return; }
+            if (!DA.GetData(2, ref gridLength)) { return; }
+            if (!DA.GetData(3, ref rotationAngle)) { return; }
             if (!DA.GetData(4, ref surfExtend)) { return; }
+            if (!DA.GetData(5, ref numAxis)) { return; }
+
+
+            // DATA VALIDATION
+
+            if ((surf.IsClosed(0) && surf.IsClosed(1)) || surf.IsSphere() || surf.IsTorus())
+            {
+                AddRuntimeMessage(GH_RuntimeMessageLevel.Warning, "Surfaces closed in both U and V direction are not supported");
+                return;
+            }
+
+            if(numAxis <3 || numAxis >6)
+            {
+                AddRuntimeMessage(GH_RuntimeMessageLevel.Warning, "Number of Axis must be between 3 and 6"); 
+                return; 
+            }
+
 
             // DO CHEBYSHEV HERE!!
-            ChebyshevNet net = new ChebyshevNet(surf, stPt, gridLength, rotationAngle, surfExtend);
-            net.GenerateChebyshevNet();
-            //DataTree<Point3d> tree = new DataTree<Point3d>();
-            // OUTPUT DATA (MUST BE GH_TREE)
-            DA.SetDataTree(0, net.Grid);
-            if (net.WarpNet != null) DA.SetDataTree(1, net.WarpNet);
-            if (net.WeftNet != null) DA.SetDataTree(2, net.WeftNet);
 
+            ChebyshevNet net = new ChebyshevNet(surf, stPt, gridLength, rotationAngle, surfExtend, numAxis);
+            net.GenerateChebyshevNet();
+
+
+            // OUTPUT DATA (MUST BE GH_TREE)
+
+            if (net.Grid != null) DA.SetDataTree(0, net.Grid);
+            else AddRuntimeMessage(GH_RuntimeMessageLevel.Warning, "OOPS! Something happened! No point grid was found"); 
+
+            if (net.WarpNet != null) DA.SetDataTree(1, net.WarpNet);
+            else AddRuntimeMessage(GH_RuntimeMessageLevel.Warning, "OOPS! Something happened! No WARP net was found"); 
+
+            if (net.WeftNet != null) DA.SetDataTree(2, net.WeftNet);
+            else AddRuntimeMessage(GH_RuntimeMessageLevel.Warning, "OOPS! Something happened! No WEFT net was found"); 
         }
 
         /// <summary>

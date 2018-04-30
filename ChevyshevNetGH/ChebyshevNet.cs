@@ -21,6 +21,7 @@ namespace ChevyshevNetGH
         int _MAXITERATIONS = 1000;
         double _angle; // In radians!!
         Boolean _extend;
+        double _axisNum;
 
 
         //Class level Public properties
@@ -32,7 +33,7 @@ namespace ChevyshevNetGH
         public DataTree<Point3d> Grid {get { return _grid; }} // Read only value
 
         //Constructor
-        public ChebyshevNet(Surface aSurface, Point3d aStartingPoint, double aDesiredLength, double angleInRad, bool extend)
+        public ChebyshevNet(Surface aSurface, Point3d aStartingPoint, double aDesiredLength, double angleInRad, bool extend, double numberOfAxis)
         {
             _surface = aSurface;
             _startingPoint = aStartingPoint;
@@ -42,6 +43,7 @@ namespace ChevyshevNetGH
             _grid = new DataTree<Point3d>();
             _warpNet = new DataTree<Line>();
             _weftNet = new DataTree<Line>();
+            _axisNum = numberOfAxis;
         }
 
         //Methods
@@ -49,7 +51,6 @@ namespace ChevyshevNetGH
         { // Main method for grid generation
 
             // Create empty placeholder trees
-            DataTree<Line> gridLines = new DataTree<Line>();
             DataTree<Point3d> gridAxisPoints = new DataTree<Point3d>();
             DataTree<Point3d> gridPoints = new DataTree<Point3d>();
 
@@ -61,6 +62,7 @@ namespace ChevyshevNetGH
                 _surface = _surface.Extend(IsoStatus.South, _desiredLength * 2, true);
                 _surface = _surface.Extend(IsoStatus.West, _desiredLength * 2, true);
             }
+
             // Find starting point u,v and tangent plane
             double u, v;
             _surface.ClosestPoint(_startingPoint, out u, out v); // Make sure the point is in the surface
@@ -73,16 +75,22 @@ namespace ChevyshevNetGH
 
             // Set direction list
             List<Vector3d> dir = new List<Vector3d>();
-
-            dir.Add(tPlane.XAxis * _desiredLength);
-            dir.Add(tPlane.YAxis * _desiredLength);
-            dir.Add(tPlane.XAxis * - _desiredLength);
-            dir.Add(tPlane.YAxis * - _desiredLength);
+            for (int axisCount = 0; axisCount < _axisNum; axisCount++){
+                double rotation = ((2 * Math.PI) / _axisNum) * axisCount;
+                Vector3d thisAxis = tPlane.XAxis;
+                thisAxis.Rotate(rotation, tPlane.ZAxis);
+                dir.Add(thisAxis);
+                
+            }
+            //dir.Add(tPlane.XAxis * _desiredLength);
+            //dir.Add(tPlane.YAxis * _desiredLength);
+            //dir.Add(tPlane.XAxis * - _desiredLength);
+            //dir.Add(tPlane.YAxis * - _desiredLength);
 
             // Generate Axis Points for Net
             gridAxisPoints = findAllAxisPoints(_startingPoint, dir);
 
-            // Generate the Grid using Axis list
+            // Generate the Grid
             gridPoints = getAllGridPoints(gridAxisPoints);
 
 
@@ -258,7 +266,7 @@ namespace ChevyshevNetGH
 
             DataTree<Point3d> axis = new DataTree<Point3d>(); //Create an empty array of List<Point3d>
 
-            for (int i = 0; i < 4; i++)
+            for (int i = 0; i < _axisNum; i++)
             { // Iterate for every axis
 
                 List<Point3d> pts = new List<Point3d>();
