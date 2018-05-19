@@ -21,7 +21,9 @@ namespace ChevyshevNetGH
         int _MAXITERATIONS = 1000;
         double _angle; // In radians!!
         Boolean _extend;
-        double _axisNum;
+        double _extendLength;
+        int _axisNum;
+        List<double> _axisAngleList;
 
 
         //Class level Public properties
@@ -33,17 +35,19 @@ namespace ChevyshevNetGH
         public DataTree<Point3d> Grid {get { return _grid; }} // Read only value
 
         //Constructor
-        public ChebyshevNet(Surface aSurface, Point3d aStartingPoint, double aDesiredLength, double angleInRad, bool extend, double numberOfAxis)
+        public ChebyshevNet(Surface aSurface, Point3d aStartingPoint, double aDesiredLength, double angleInRad, bool extend, double extendLength, int numberOfAxis, List<double> axisAngleList)
         {
             _surface = aSurface;
             _startingPoint = aStartingPoint;
             _desiredLength = aDesiredLength;
             _angle = angleInRad;
             _extend = extend;
+            _extendLength = extendLength;
             _grid = new DataTree<Point3d>();
             _warpNet = new DataTree<Line>();
             _weftNet = new DataTree<Line>();
             _axisNum = numberOfAxis;
+            _axisAngleList = axisAngleList;
         }
 
         //Methods
@@ -57,10 +61,10 @@ namespace ChevyshevNetGH
             // Extend surface beyond boundaries to get a better coverage from the net
             if (_extend)
             {
-                _surface = _surface.Extend(IsoStatus.North, _desiredLength * 2, true);
-                _surface = _surface.Extend(IsoStatus.East, _desiredLength * 2, true);
-                _surface = _surface.Extend(IsoStatus.South, _desiredLength * 2, true);
-                _surface = _surface.Extend(IsoStatus.West, _desiredLength * 2, true);
+                _surface = _surface.Extend(IsoStatus.North, _desiredLength * _extendLength, true);
+                _surface = _surface.Extend(IsoStatus.East, _desiredLength * _extendLength, true);
+                _surface = _surface.Extend(IsoStatus.South, _desiredLength * _extendLength, true);
+                _surface = _surface.Extend(IsoStatus.West, _desiredLength * _extendLength, true);
             }
 
             // Find starting point u,v and tangent plane
@@ -75,12 +79,18 @@ namespace ChevyshevNetGH
 
             // Set direction list
             List<Vector3d> dir = new List<Vector3d>();
+            Vector3d thisAxis = tPlane.XAxis;
             for (int axisCount = 0; axisCount < _axisNum; axisCount++){
-                double rotation = ((2 * Math.PI) / _axisNum) * axisCount;
-                Vector3d thisAxis = tPlane.XAxis;
-                thisAxis.Rotate(rotation, tPlane.ZAxis);
+                if (_axisAngleList == null|| _axisAngleList.Count == 0 )
+                {
+                    double rotation = ((2 * Math.PI) / _axisNum) * axisCount;
+                    thisAxis = tPlane.XAxis;
+                    thisAxis.Rotate(rotation, tPlane.ZAxis);
+
+                } else {
+                    thisAxis.Rotate(_axisAngleList[axisCount], tPlane.ZAxis);
+                }
                 dir.Add(thisAxis);
-                
             }
             //dir.Add(tPlane.XAxis * _desiredLength);
             //dir.Add(tPlane.YAxis * _desiredLength);
@@ -98,36 +108,6 @@ namespace ChevyshevNetGH
             _grid = gridPoints;
             //CleanGrid();
             //_net = gridLines;
-        }
-
-        void CleanGrid()
-        {
-            DataTree<Point3d> cleanTree = new DataTree<Point3d>();
-
-            foreach (GH_Path path in _grid.Paths)
-            {
-                int quadrantIndex = path.Indices[0];
-
-                if (quadrantIndex == 0)
-                {
-                    
-                }
-                else if (quadrantIndex == 1) 
-                {
-                    
-                }
-                else if (quadrantIndex == 2)
-                {
-                    
-                } 
-                else if (quadrantIndex == 3)
-                {
-                    
-                }
-            }
-
-            _grid = cleanTree;
-
         }
 
         DataTree<Point3d> getAllGridPoints(DataTree<Point3d> axisPoints)

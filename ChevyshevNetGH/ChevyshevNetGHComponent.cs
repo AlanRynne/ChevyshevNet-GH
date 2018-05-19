@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Collections.Generic;
 using Grasshopper.Kernel;
 using Rhino.Geometry;
 
@@ -34,9 +35,11 @@ namespace ChevyshevNetGH
             pManager.AddSurfaceParameter("Surface", "Srf", "Surface on which to obtain the grid", GH_ParamAccess.item);
             pManager.AddPointParameter("Starting Point", "P", "Starting UV Coordinates for grid", GH_ParamAccess.item);
             pManager.AddNumberParameter("Grid Size", "L", "Specify grid size for Chebyshev net", GH_ParamAccess.item, 1.0);
-            pManager.AddNumberParameter("Rotation Angle", "Angle", "Rotation angle in radians", GH_ParamAccess.item, 0.0);
-            pManager.AddBooleanParameter("Extend Surface", "Extend", "Set to true to extend the surface", GH_ParamAccess.item, true);
-            pManager.AddNumberParameter("Number of axis", "Axis no.", "Number of axis for the grid generation (3 to 6)",GH_ParamAccess.item, 4);
+            pManager.AddAngleParameter("Rotation Angle", "Angle", "Rotation angle in radians", GH_ParamAccess.item, 0.0);
+            pManager.AddBooleanParameter("Extend Surface", "Extend", "Set to true to extend the surface", GH_ParamAccess.item, false);
+            pManager.AddNumberParameter("Extension Length", "E. Length", "Optional: set a custom extension length", GH_ParamAccess.item, 2.0);
+            pManager.AddIntegerParameter("Number of axis", "Axis no.", "Number of axis for the grid generation (3 to 6)",GH_ParamAccess.item, 4);
+            pManager.AddAngleParameter("Skew Angle", "Skw.Angle", "OPTIONAL: List of Angles to use for uneven distribution", GH_ParamAccess.list, new List<double>());
         }
 
         /// <summary>
@@ -64,19 +67,23 @@ namespace ChevyshevNetGH
             double gridLength = 1.0;
             double rotationAngle = 0.0;
             bool surfExtend = true;
-            double numAxis = 0;
+            double surfExtendLength = 1.0;
+            int numAxis = 0;
+            List<double> axisAnglesList = new List<double>();
 
             if (!DA.GetData(0, ref surf)) { return; }
             if (!DA.GetData(1, ref stPt)) { return; }
             if (!DA.GetData(2, ref gridLength)) { return; }
             if (!DA.GetData(3, ref rotationAngle)) { return; }
             if (!DA.GetData(4, ref surfExtend)) { return; }
-            if (!DA.GetData(5, ref numAxis)) { return; }
+            if (!DA.GetData(5, ref surfExtendLength)) { return; }
+            if (!DA.GetData(6, ref numAxis)) { return; }
+            if (!DA.GetDataList(7,axisAnglesList)) { return; }
 
 
             // DATA VALIDATION
 
-            if ((surf.IsClosed(0) && surf.IsClosed(1)) || surf.IsSphere() || surf.IsTorus())
+            if ((surf.IsClosed(0) && surf.IsClosed(1)))
             {
                 AddRuntimeMessage(GH_RuntimeMessageLevel.Warning, "Surfaces closed in both U and V direction are not supported");
                 return;
@@ -91,7 +98,7 @@ namespace ChevyshevNetGH
 
             // DO CHEBYSHEV HERE!!
 
-            ChebyshevNet net = new ChebyshevNet(surf, stPt, gridLength, rotationAngle, surfExtend, numAxis);
+            ChebyshevNet net = new ChebyshevNet(surf, stPt, gridLength, rotationAngle, surfExtend,surfExtendLength, numAxis, axisAnglesList);
             net.GenerateChebyshevNet();
 
 
@@ -117,7 +124,7 @@ namespace ChevyshevNetGH
             {
                 // You can add image files to your project resources and access them like this:
                 //return Resources.IconForThisComponent;
-
+               
                 return null;
             }
         }
