@@ -81,6 +81,7 @@ namespace ChevyshevNetGH
             List<Vector3d> dir = new List<Vector3d>();
             Vector3d thisAxis = tPlane.XAxis;
             for (int axisCount = 0; axisCount < _axisNum; axisCount++){
+                
                 if (_axisAngleList == null|| _axisAngleList.Count == 0 )
                 {
                     double rotation = ((2 * Math.PI) / _axisNum) * axisCount;
@@ -90,12 +91,9 @@ namespace ChevyshevNetGH
                 } else {
                     thisAxis.Rotate(_axisAngleList[axisCount], tPlane.ZAxis);
                 }
+
                 dir.Add(thisAxis);
             }
-            //dir.Add(tPlane.XAxis * _desiredLength);
-            //dir.Add(tPlane.YAxis * _desiredLength);
-            //dir.Add(tPlane.XAxis * - _desiredLength);
-            //dir.Add(tPlane.YAxis * - _desiredLength);
 
             // Generate Axis Points for Net
             gridAxisPoints = findAllAxisPoints(_startingPoint, dir);
